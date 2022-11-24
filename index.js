@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const cors = require('cors');
 require('dotenv').config();
@@ -21,12 +21,23 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try{
         const productsCategoriCollection = client.db("oldBooksHere1").collection("productsCategories1");
+        const productCollection = client.db("oldBooksHere1").collection("products");
 
         app.get('/productsCategoris', async(req, res) => {
             const result = await productsCategoriCollection.find({}).toArray();
             res.send(result);
-            console.log(result);
+        });
+        
+        app.get('/products/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {};
+            const result = await productCollection.find(query).toArray();
+            const matchProduct = result.filter(pItem => pItem.categoryId === id);
+            res.send(matchProduct);
+            
+            
         })
+
     }
     finally{
 
