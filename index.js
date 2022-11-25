@@ -1,7 +1,7 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
-const cors = require('cors');
+const cors = require("cors");
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -22,6 +22,8 @@ async function run() {
     try{
         const productsCategoriCollection = client.db("oldBooksHere1").collection("productsCategories1");
         const productCollection = client.db("oldBooksHere1").collection("products");
+        const bookingCollection = client.db("oldBooksHere1").collection('bookings');
+        const users = client.db("oldBooksHere1").collection('users');
 
         app.get('/productsCategoris', async(req, res) => {
             const result = await productsCategoriCollection.find({}).toArray();
@@ -34,10 +36,18 @@ async function run() {
             const result = await productCollection.find(query).toArray();
             const matchProduct = result.filter(pItem => pItem.categoryId === id);
             res.send(matchProduct);
-            
-            
+        })
+        app.post('/bookings', async(req, res) => {
+            const product = req.body;
+            const result = await bookingCollection.insertOne(product);
+            res.send(result);
+            console.log(product, result);
         })
 
+        app.post('/users', async(req, res) => {
+            const email = req.query;
+            console.log(email);
+        })
     }
     finally{
 
