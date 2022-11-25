@@ -23,7 +23,7 @@ async function run() {
         const productsCategoriCollection = client.db("oldBooksHere1").collection("productsCategories1");
         const productCollection = client.db("oldBooksHere1").collection("products");
         const bookingCollection = client.db("oldBooksHere1").collection('bookings');
-        const users = client.db("oldBooksHere1").collection('users');
+        const userCollection = client.db("oldBooksHere1").collection('users');
 
         app.get('/productsCategoris', async(req, res) => {
             const result = await productsCategoriCollection.find({}).toArray();
@@ -45,8 +45,16 @@ async function run() {
         })
 
         app.post('/users', async(req, res) => {
-            const email = req.query;
-            console.log(email);
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+            console.log(user,result);
+        })
+        app.get('/users', async (req, res) => {
+            const order = req.query.email;
+            const query = {email: order};
+            const result = await bookingCollection.find(query).toArray();
+            console.log(result);
         })
     }
     finally{
