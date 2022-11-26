@@ -40,10 +40,17 @@ async function run() {
         app.get('/products', async (req, res) => {
             const order = req.query.email;
             const query = {email: order};
-            const result = await bookingCollection.find(query).toArray();
+            const result = await productCollection.find(query).toArray();
             res.send(result)
             // console.log(result);
         })
+        app.post('/products', async (req, res) => {
+            const product = req.body;
+            const result = await productCollection.insertOne(product);
+            res.send(result);
+            console.log(product, result);
+        })
+
         app.get('/users/seller/:email', async(req, res) => {
             const email = req.params.email;
             const query = {email};
@@ -51,13 +58,13 @@ async function run() {
             console.log(email,query, user);
             res.send({isSeller: user?.role === 'seller'});
         })
-        app.get('/users/buyer/:email', async(req, res) => {
-            const email = req.params.email;
-            const query = {email};
-            const user = await userCollection.findOne(query);
-            console.log(email,query, user);
-            res.send({isBuyer: user?.role === 'buyer'});
-        })
+        // app.get('/users/buyer/:email', async(req, res) => {
+        //     const email = req.params.email;
+        //     const query = {email};
+        //     const user = await userCollection.findOne(query);
+        //     console.log(email,query, user);
+        //     res.send({isBuyer: user?.role === 'buyer'});
+        // })
 
 
         app.post('/bookings', async(req, res) => {
