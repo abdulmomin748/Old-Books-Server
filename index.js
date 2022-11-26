@@ -37,25 +37,43 @@ async function run() {
             const matchProduct = result.filter(pItem => pItem.categoryId === id);
             res.send(matchProduct);
         })
+        app.get('/products', async (req, res) => {
+            const order = req.query.email;
+            const query = {email: order};
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result)
+            // console.log(result);
+        })
+        app.get('/users/seller/:email', async(req, res) => {
+            const email = req.params.email;
+            const query = {email};
+            const user = await userCollection.findOne(query);
+            console.log(email,query, user);
+            res.send({isSeller: user?.role === 'seller'});
+        })
+        app.get('/users/buyer/:email', async(req, res) => {
+            const email = req.params.email;
+            const query = {email};
+            const user = await userCollection.findOne(query);
+            console.log(email,query, user);
+            res.send({isBuyer: user?.role === 'buyer'});
+        })
+
+
         app.post('/bookings', async(req, res) => {
             const product = req.body;
             const result = await bookingCollection.insertOne(product);
             res.send(result);
-            console.log(product, result);
+            // console.log(product, result);
         })
 
         app.post('/users', async(req, res) => {
             const user = req.body;
             const result = await userCollection.insertOne(user);
             res.send(result);
-            console.log(user,result);
+            // console.log(user,result);
         })
-        app.get('/users', async (req, res) => {
-            const order = req.query.email;
-            const query = {email: order};
-            const result = await bookingCollection.find(query).toArray();
-            console.log(result);
-        })
+        
     }
     finally{
 
