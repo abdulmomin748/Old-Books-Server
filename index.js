@@ -44,6 +44,14 @@ async function run() {
             res.send(result)
             console.log(order,query,result);
         })
+        // app.get('/products/:email', async(req, res) => {
+        //     const email = req;
+        //     // const query = {email};
+        //     // const result = await productCollection.find(query).toArray();
+        //     // // const matchProduct = result.filter(pItem => pItem.categoryId === id);
+        //     // res.send(result);
+        //     console.log(req);
+        // })
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productCollection.insertOne(product);
@@ -89,7 +97,7 @@ async function run() {
                return res.send({});
             }
             res.send(user)
-            console.log(user);
+            // console.log(user);
         })
         app.post('/users', async(req, res) => {
             const user = req.body;
@@ -103,7 +111,7 @@ async function run() {
 
     }
 }
-run().catch(err => console.log(err))
+run().catch(err => {console.error(err)})
 
 
 app.listen(port, () => {
