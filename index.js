@@ -26,33 +26,67 @@ async function run() {
         const bookingCollection = client.db("oldBooksHere1").collection('bookings');
         const userCollection = client.db("oldBooksHere1").collection('users');
         const paymentsCollection = client.db("oldBooksHere1").collection('payments');
+        const advertiseCollection = client.db("oldBooksHere1").collection('advertises');
+
+        app.post('/advertises', async(req, res) => {
+            const advertiseItem = req.body;
+            
+            const id = advertiseItem._id;
+            const filter = {_id: ObjectId(id)};
+            const updateDoc = {
+                $set: {
+                    advertised: true,
+                }
+            }
+            const checkAdvertised = await productCollection.updateOne(filter, updateDoc);
+            const result = await advertiseCollection.insertOne(advertiseItem);
+            console.log(result,filter);
+        })
+        app.get('/advertises', async(req, res) => {
+            const result = await advertiseCollection.find({}).toArray();
+            res.send(result);
+        });
 
         app.get('/productsCategoris', async(req, res) => {
             const result = await productsCategoriCollection.find({}).toArray();
             res.send(result);
         });
         
+
         app.get('/products/:id', async(req, res) => {
+            
+
             const id = req.params.id;
-            const query = {};
+            // const alreadyPaidId = {_id: ObjectId(id)};
+            // const alreadyPaid = await bookingCollection.findOne(alreadyPaidId)
+            // console.log(alreadyPaid);
+            const query = {categoryId: id};
             const result = await productCollection.find(query).toArray();
-            const matchProduct = result.filter(pItem => pItem.categoryId === id);
+            const matchProduct = result.filter(pItem => pItem.isPaid === false);
             res.send(matchProduct);
         })
         app.get('/products', async (req, res) => {
             const order = req.query.email;
             const query = {email: order};
             const result = await productCollection.find(query).toArray();
-            res.send(result)
-            console.log(order,query,result);
+            res.send(result);
+            // console.log(order,query,result);
         })
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productCollection.insertOne(product);
             res.send(result);
-            // console.log(product, result);
+            // console.log(paidResult);
+        })
+        app.delete('/products/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await productCollection.deleteOne(query);
+            res.send(result);
+            console.log(id,query,result);    
         })
 
+        
         app.get('/users/seller/:email', async(req, res) => {
             const email = req.params.email;
             const query = {email};
@@ -99,10 +133,18 @@ async function run() {
                     paid: true,
                 }
             }
+            
+            const isPaidDoc = {
+                $set:{
+                    isPaid: true
+                }
+            }
+            const checkIsPaid = await productCollection.updateOne(filter, isPaidDoc);
             const updateDocResult = await bookingCollection.updateOne(filter, updateDoc)
             res.send(result);
-            console.log(result);
+            console.log(filter);
         })
+        
 
         app.get('/bookings', async(req, res) => {
             const bookingEmail = req.query.email;
@@ -117,6 +159,8 @@ async function run() {
             res.send(result);
             // console.log(product, result);
         })
+        
+
 
         app.get('/users', async(req, res) => {
             const userEmail = req.query.email;
