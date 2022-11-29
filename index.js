@@ -87,6 +87,12 @@ async function run() {
         })
 
         
+        app.get('/users/admin/:email', async(req, res) => {
+            const email = req.params.email;
+            const query = {email};
+            const user = await usersCollection.findOne(query);
+            res.send({isAdmin: user?.role === 'admin'});
+        })
         app.get('/users/seller/:email', async(req, res) => {
             const email = req.params.email;
             const query = {email};
@@ -101,6 +107,19 @@ async function run() {
             // console.log(email,query, user);
             res.send({isBuyer: user?.role === 'buyer'});
         })
+        app.get('/allSellers', async(req, res) => {
+            const result = await userCollection.find({}).toArray();
+            const matchSellers = result.filter(seller => seller.role === 'seller');
+            res.send(matchSellers);
+            console.log(result);
+        })
+        app.get('/allBuyers', async(req, res) => {
+            const result = await userCollection.find({}).toArray();
+            const matchBuyers = result.filter(buyer => buyer.role === 'buyer');
+            res.send(matchBuyers);
+            console.log(matchBuyers);
+        })
+
 
         app.get('/bookings/:id', async(req, res) => {
             const id = req.params.id;
@@ -185,8 +204,15 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result);
             // console.log(user,result);
-            
         })
+        app.delete('/users/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        
         
     }
     finally{
