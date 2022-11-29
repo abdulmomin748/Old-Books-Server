@@ -4,6 +4,7 @@ const app = express();
 const cors = require("cors");
 require('dotenv').config();
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 app.use(cors());
 app.use(express.json());
@@ -14,7 +15,7 @@ app.get('/', (req, res) => {
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tmuuwhy.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+console.log(uri,process.env.STRIPE_SECRET_KEY);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
@@ -24,6 +25,7 @@ async function run() {
         const productCollection = client.db("oldBooksHere1").collection("products");
         const bookingCollection = client.db("oldBooksHere1").collection('bookings');
         const userCollection = client.db("oldBooksHere1").collection('users');
+        const paymentsCollection = client.db("oldBooksHere1").collection('payments');
 
         app.get('/productsCategoris', async(req, res) => {
             const result = await productsCategoriCollection.find({}).toArray();
@@ -44,14 +46,6 @@ async function run() {
             res.send(result)
             console.log(order,query,result);
         })
-        // app.get('/products/:email', async(req, res) => {
-        //     const email = req;
-        //     // const query = {email};
-        //     // const result = await productCollection.find(query).toArray();
-        //     // // const matchProduct = result.filter(pItem => pItem.categoryId === id);
-        //     // res.send(result);
-        //     console.log(req);
-        // })
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productCollection.insertOne(product);
@@ -72,6 +66,42 @@ async function run() {
             const user = await userCollection.findOne(query);
             // console.log(email,query, user);
             res.send({isBuyer: user?.role === 'buyer'});
+        })
+
+        app.get('/bookings/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await bookingCollection.findOne(query);
+            res.send(result);
+            console.log(result);
+        })
+
+        app.post('/create-payment-intent', async(req, res) => {
+            const booking = req.body;
+            const price = booking.productPrice;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: "usd",
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                  ],
+            });
+            res.send({ clientSecret: paymentIntent.client_secret,});
+        })
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.bookingId;
+            const filter = {_id: ObjectId(id)};
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                }
+            }
+            const updateDocResult = await bookingCollection.updateOne(filter, updateDoc)
+            res.send(result);
+            console.log(result);
         })
 
         app.get('/bookings', async(req, res) => {
@@ -100,10 +130,18 @@ async function run() {
             // console.log(user);
         })
         app.post('/users', async(req, res) => {
+            const existEmail = req.query.email;
+            const existUserQuery = {email: existEmail}
+            const userExist = await userCollection.findOne(existUserQuery);
+            console.log(userExist);
+            if(userExist){
+                return res.send({message: 'user allready exist'})
+            }
             const user = req.body;
             const result = await userCollection.insertOne(user);
             res.send(result);
             // console.log(user,result);
+            
         })
         
     }
