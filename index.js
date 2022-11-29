@@ -40,7 +40,7 @@ async function run() {
             }
             const checkAdvertised = await productCollection.updateOne(filter, updateDoc);
             const result = await advertiseCollection.insertOne(advertiseItem);
-            console.log(result,filter);
+            // console.log(result,filter);
         })
         app.get('/advertises', async(req, res) => {
             const result = await advertiseCollection.find({}).toArray();
@@ -90,7 +90,7 @@ async function run() {
         app.get('/users/admin/:email', async(req, res) => {
             const email = req.params.email;
             const query = {email};
-            const user = await usersCollection.findOne(query);
+            const user = await userCollection.findOne(query);
             res.send({isAdmin: user?.role === 'admin'});
         })
         app.get('/users/seller/:email', async(req, res) => {
@@ -152,17 +152,20 @@ async function run() {
                     paid: true,
                 }
             }
-            
-            const isPaidDoc = {
-                $set:{
-                    isPaid: true
+            const changePaidStatus = await bookingCollection.updateOne(filter, updateDoc)
+            console.log(changePaidStatus, payment);
+
+            const updateBeforeBookingId = payment.beforeBookingProductId;
+            const BeforeBookingFilter = {_id: ObjectId(updateBeforeBookingId)};
+            const updateBeforeBookingDoc = {
+                $set: {
+                    isPaid: true,
                 }
             }
-            const checkIsPaid = await productCollection.updateOne(filter, isPaidDoc);
-            const updateDocResult = await bookingCollection.updateOne(filter, updateDoc)
+            const updateDocResult = await productCollection.updateOne(BeforeBookingFilter, updateBeforeBookingDoc)
             res.send(result);
-            console.log(filter);
         })
+
         
 
         app.get('/bookings', async(req, res) => {
