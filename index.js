@@ -50,12 +50,13 @@ async function run() {
             const result = await reportedCollection.find({}).toArray();
             res.send(result);
         })
-        app.delete('/deletereportedItems/:id', (req, res) => {
+        app.delete('/deletereportedItems/:id',async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
-            const result =  reportedCollection.deleteOne(query);
+            const result = await reportedCollection.deleteOne(query);
+            console.log(result);
             res.send(result);
-            console.log(id);
+            
         })
 
 
