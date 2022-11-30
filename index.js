@@ -27,6 +27,37 @@ async function run() {
         const userCollection = client.db("oldBooksHere1").collection('users');
         const paymentsCollection = client.db("oldBooksHere1").collection('payments');
         const advertiseCollection = client.db("oldBooksHere1").collection('advertises');
+        const reportedCollection = client.db("oldBooksHere1").collection('reports');
+
+        app.post('/reportedItems', async(req, res) => {
+            const reportItem = req.body;
+            reportItem['isReport'] = true
+            const result = await reportedCollection.insertOne(reportItem);
+            const id = reportItem._id;
+            console.log(id)
+            const filter = {_id: ObjectId(id)};
+            const updateDoc = {
+                $set: {
+                    isReport: true,
+                }
+            }
+            const updateReport = await productCollection.updateOne(filter, updateDoc);
+            res.send(result)
+            console.log(updateReport);
+        })
+        app.get('/reportedItems', async(req, res) => {
+            const result = await reportedCollection.find({}).toArray();
+            res.send(result);
+        })
+        app.delete('/reportedItems/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await reportedCollection.deleteOne(query);
+            res.send(result);
+            console.log(query, result);
+        })
+
+
 
         app.post('/advertises', async(req, res) => {
             const advertiseItem = req.body;
@@ -46,6 +77,7 @@ async function run() {
             const result = await advertiseCollection.find({}).toArray();
             res.send(result);
         });
+
 
         app.get('/productsCategoris', async(req, res) => {
             const result = await productsCategoriCollection.find({}).toArray();
@@ -70,12 +102,25 @@ async function run() {
             const query = {email: order};
             const result = await productCollection.find(query).toArray();
             res.send(result);
+
+            const filter = {}
+            const options = {upsert: true};
+            const updateDoc = {
+                $set: {
+                    isReport: false,   
+                }
+            }
+            const result33 = await productCollection.updateMany(filter, updateDoc, options);
+
+
             // console.log(order,query,result);
         })
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productCollection.insertOne(product);
             res.send(result);
+
+            
             // console.log(paidResult);
         })
         app.delete('/products/:id', async(req, res) => {
@@ -83,7 +128,7 @@ async function run() {
             const query = {_id: ObjectId(id)};
             const result = await productCollection.deleteOne(query);
             res.send(result);
-            console.log(id,query,result);    
+            // console.log(id,query,result);    
         })
 
         
@@ -111,13 +156,13 @@ async function run() {
             const result = await userCollection.find({}).toArray();
             const matchSellers = result.filter(seller => seller.role === 'seller');
             res.send(matchSellers);
-            console.log(result);
+            // console.log(result);
         })
         app.get('/allBuyers', async(req, res) => {
             const result = await userCollection.find({}).toArray();
             const matchBuyers = result.filter(buyer => buyer.role === 'buyer');
             res.send(matchBuyers);
-            console.log(matchBuyers);
+            // console.log(matchBuyers);
         })
 
 
@@ -126,7 +171,7 @@ async function run() {
             const query = {_id: ObjectId(id)};
             const result = await bookingCollection.findOne(query);
             res.send(result);
-            console.log(result);
+            // console.log(result);
         })
 
         app.post('/create-payment-intent', async(req, res) => {
@@ -153,7 +198,7 @@ async function run() {
                 }
             }
             const changePaidStatus = await bookingCollection.updateOne(filter, updateDoc)
-            console.log(changePaidStatus, payment);
+            // console.log(changePaidStatus, payment);
 
             const updateBeforeBookingId = payment.beforeBookingProductId;
             const BeforeBookingFilter = {_id: ObjectId(updateBeforeBookingId)};
@@ -199,7 +244,7 @@ async function run() {
             const existEmail = req.query.email;
             const existUserQuery = {email: existEmail}
             const userExist = await userCollection.findOne(existUserQuery);
-            console.log(userExist);
+            // console.log(userExist);
             if(userExist){
                 return res.send({message: 'user allready exist'})
             }
@@ -207,6 +252,18 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result);
             // console.log(user,result);
+        })
+        app.patch('/users', async(req, res) => {
+            const reqEmail = req.query.email
+            const filter = {email: reqEmail};
+            const updateDoc = {
+                $set: {
+                    verified: true,
+                }
+            }
+            const result = await productCollection.updateMany(filter, updateDoc);
+            res.send(result);
+            // console.log(reqEmail, filter, result);
         })
         app.delete('/users/:id', async(req, res) => {
             const id = req.params.id;
