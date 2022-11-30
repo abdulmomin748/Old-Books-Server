@@ -29,19 +29,20 @@ async function run() {
         const advertiseCollection = client.db("oldBooksHere1").collection('advertises');
         const reportedCollection = client.db("oldBooksHere1").collection('reports');
 
-        app.post('/reportedItems', async(req, res) => {
+        app.put('/reportedItems', async(req, res) => {
             const reportItem = req.body;
             reportItem['isReport'] = true
             const result = await reportedCollection.insertOne(reportItem);
             const id = reportItem._id;
             console.log(id)
             const filter = {_id: ObjectId(id)};
+            const options = { upsert: true };
             const updateDoc = {
                 $set: {
                     isReport: true,
                 }
             }
-            const updateReport = await productCollection.updateOne(filter, updateDoc);
+            const updateReport = await productCollection.updateOne(filter, updateDoc, options);
             res.send(result)
             console.log(updateReport);
         })
@@ -49,12 +50,12 @@ async function run() {
             const result = await reportedCollection.find({}).toArray();
             res.send(result);
         })
-        app.delete('/reportedItems/:id', async(req, res) => {
+        app.delete('/deletereportedItems/:id', (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)};
-            const result = await reportedCollection.deleteOne(query);
+            const query = { _id: ObjectId(id) }
+            const result =  reportedCollection.deleteOne(query);
             res.send(result);
-            console.log(query, result);
+            console.log(id);
         })
 
 
